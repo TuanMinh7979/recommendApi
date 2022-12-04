@@ -18,51 +18,56 @@ cvFilePath = os.path.join(module_dir, '..\\media\\pcvsdata.xlsx',)
 jobFilePath = os.path.join(module_dir, '..\\media\\pjobsdata.xlsx',)
 
 
-
-   
-
-
 def getSugCvForJob(request, JobId):
-  
+
     cvdf = pd.read_excel(cvFilePath)
-    jobdf= pd.read_excel(jobFilePath)
-    ls=[]
+    jobdf = pd.read_excel(jobFilePath)
+    ls = []
     ls.append(jobdf.iloc[0]['jobdata'])
     tfidf_jobs = tfidf_vectorizer.fit_transform(ls)
 
     tfidf_cvs = tfidf_vectorizer.transform(cvdf['cvdata'])
 
-    cos_similarity = map(lambda x: cosine_similarity(tfidf_cvs,x),tfidf_jobs)
+    cos_similarity = map(lambda x: cosine_similarity(tfidf_cvs, x), tfidf_jobs)
     simrs = list(cos_similarity)
 
-    rs=simrs[0]
-    kq= {x[0]:idx for idx,x in enumerate(rs)}
+    rs = simrs[0]
+    kq = {x[0]: idx for idx, x in enumerate(rs)}
     print(kq)
-    srs=sorted(kq.items(), key=lambda x: x[0])
-    fiveBestSimilar= srs[-5:]
-    finalRs= [x[1] for x in fiveBestSimilar]
-    return JsonResponse(status=200, data={ "sugList": finalRs})
+    srs = sorted(kq.items(), key=lambda x: x[0])
+    fiveBestSimilar = srs[-5:]
+    finalRs = [x[1] for x in fiveBestSimilar]
+    ids = []
+    for idx in finalRs:
+        ids.append(cvdf.iloc[idx]['_id'])
+    print(ids)
+    return JsonResponse(status=200, data={"sugList": finalRs})
+
 
 def getSugJobForCv(request, CvId):
-  
+
     cvdf = pd.read_excel(cvFilePath)
-    jobdf= pd.read_excel(jobFilePath)
-    ls=[]
+    jobdf = pd.read_excel(jobFilePath)
+    ls = []
     ls.append(cvdf.iloc[0]['cvdata'])
     tfidf_cvs = tfidf_vectorizer.fit_transform(ls)
 
     tfidf_jobs = tfidf_vectorizer.transform(jobdf['jobdata'])
 
-    cos_similarity = map(lambda x: cosine_similarity(tfidf_jobs,x),tfidf_cvs)
+    cos_similarity = map(lambda x: cosine_similarity(tfidf_jobs, x), tfidf_cvs)
     simrs = list(cos_similarity)
 
-    rs=simrs[0]
+    rs = simrs[0]
     print(rs)
-    kq= {x[0]:idx for idx,x in enumerate(rs)}
+    kq = {x[0]: idx for idx, x in enumerate(rs)}
     # print(kq)
-    srs=sorted(kq.items(), key=lambda x: x[0])
-    fiveBestSimilar= srs[-5:]
+    srs = sorted(kq.items(), key=lambda x: x[0])
+    fiveBestSimilar = srs[-5:]
     print("-----")
     print(fiveBestSimilar)
-    finalRs= [x[1] for x in fiveBestSimilar]
-    return JsonResponse(status=200, data={ "sugList": finalRs})    
+    finalRs = [x[1] for x in fiveBestSimilar]
+    ids = []
+    for idx in finalRs:
+        ids.append(jobdf.iloc[idx]['_id'])
+    print(ids)
+    return JsonResponse(status=200, data={"sugList": finalRs})
