@@ -20,17 +20,22 @@ jobFilePath = os.path.join(module_dir, '..\\media\\pjobsdata.xlsx',)
 
 def getSugCvForJob(request, JobId):
 
+    print("---------------",JobId)
     cvdf = pd.read_excel(cvFilePath)
     jobdf = pd.read_excel(jobFilePath)
+    
+    givenJobRow= jobdf.loc[jobdf['_id'] == JobId]
+    print("-----------------")
+    print(givenJobRow)
     ls = []
-    ls.append(jobdf.iloc[0]['jobdata'])
+    ls.append(givenJobRow['fulltext3'].tolist()[0])
     tfidf_jobs = tfidf_vectorizer.fit_transform(ls)
 
-    tfidf_cvs = tfidf_vectorizer.transform(cvdf['cvdata'])
+    tfidf_cvs = tfidf_vectorizer.transform(cvdf['fulltext3'])
 
     cos_similarity = map(lambda x: cosine_similarity(tfidf_cvs, x), tfidf_jobs)
     simrs = list(cos_similarity)
-
+    print("-----------------")
     rs = simrs[0]
     kq = {x[0]: idx for idx, x in enumerate(rs)}
     print(kq)
@@ -41,19 +46,25 @@ def getSugCvForJob(request, JobId):
     for idx in finalRs:
         ids.append(cvdf.iloc[idx]['_id'])
     print(ids)
-    return JsonResponse(status=200, data={"sugList": finalRs})
+    print("-----------------")
+    return JsonResponse(status=200, data={"sugList": ids})
 
 
 def getSugJobForCv(request, CvId):
 
     cvdf = pd.read_excel(cvFilePath)
     jobdf = pd.read_excel(jobFilePath)
+
+    givenCvRow= cvdf.loc[cvdf['_id'] == CvId]
+    print("-----------------")
+    print(givenCvRow)
+
     ls = []
-    ls.append(cvdf.iloc[0]['cvdata'])
+    ls.append(givenCvRow['fulltext3'].tolist()[0])
+
+
     tfidf_cvs = tfidf_vectorizer.fit_transform(ls)
-
-    tfidf_jobs = tfidf_vectorizer.transform(jobdf['jobdata'])
-
+    tfidf_jobs = tfidf_vectorizer.transform(jobdf['fulltext3'])
     cos_similarity = map(lambda x: cosine_similarity(tfidf_jobs, x), tfidf_cvs)
     simrs = list(cos_similarity)
 
@@ -70,4 +81,4 @@ def getSugJobForCv(request, CvId):
     for idx in finalRs:
         ids.append(jobdf.iloc[idx]['_id'])
     print(ids)
-    return JsonResponse(status=200, data={"sugList": finalRs})
+    return JsonResponse(status=200, data={"sugList": ids})
