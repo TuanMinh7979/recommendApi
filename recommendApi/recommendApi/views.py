@@ -158,12 +158,12 @@ def getSugCvForJob(request, jobId):
     simrs = list(cos_similarity)
 
     rs = simrs[0]
-    kq = {x[0]: idx for idx, x in enumerate(rs)}
+    kq = { str(idx):x[0] for idx, x in enumerate(rs)}
    
-    srs = sorted(kq.items(), key=lambda x: x[0])
+    srs = sorted(kq.items(), key=lambda x:x[1])
     fiveBestSimilar = srs[-5:]
    
-    finalRs = [x[1] for x in fiveBestSimilar]
+    finalRs = [int(x[0]) for x in fiveBestSimilar]
     ids = []
     for idx in finalRs:
         ids.append(cvdf.iloc[idx]['_id'])
@@ -191,17 +191,16 @@ def getSugJobForCv(request, cvId):
     simrs = list(cos_similarity)
 
     rs = simrs[0]
-   
-    kq = {x[0]: idx for idx, x in enumerate(rs)}
+    kq = { str(idx):x[0] for idx, x in enumerate(rs)}
 
-    srs = sorted(kq.items(), key=lambda x: x[0])
+    srs = sorted(kq.items(), key=lambda x:x[1])
+
     fiveBestSimilar = srs[-5:]
    
-    finalRs = [x[1] for x in fiveBestSimilar]
+    finalRs = [int(x[0]) for x in fiveBestSimilar]
     ids = []
     for idx in finalRs:
         ids.append(jobdf.iloc[idx]['_id'])
-    print(ids)
     return JsonResponse(status=200, data={"sugList": ids})
 
 
@@ -215,12 +214,22 @@ def getSimilarJob(request, jobId):
     jobSimMatrix = map(lambda x: cosine_similarity(
         otherJobsVt, x), jobToFindSimVt)
     jobSimList = list(jobSimMatrix)
-    simXidxList = {x[0]: idx for idx, x in enumerate(jobSimList[0])}
-    sortedSimXidxList = sorted(simXidxList.items(), key=lambda x: x[0])
+    print("-----1")
+    print(jobSimList)
+    simXidxList = {str(idx):x[0] for idx, x in enumerate(jobSimList[0])}
+    print("-----2")
+    print(simXidxList)
+    sortedSimXidxList = sorted(simXidxList.items(), key=lambda x: x[1])
+    print("-----3")
+    print(sortedSimXidxList)
     topSimJobtoJon = sortedSimXidxList[-6:]
-    idxSimList = [x[1] for x in topSimJobtoJon]
+    print("-----4")
+    print(topSimJobtoJon)
+    idxSimList = [int(x[0]) for x in topSimJobtoJon]
     jobSimjobIds = []
     for idx in idxSimList:
         jobSimjobIds.append(jobdf.iloc[idx]['_id'])
+    print("-----5")    
+    print(jobSimjobIds)    
     jobSimjobIds.pop()    
     return JsonResponse(status=200, data={"sugList": jobSimjobIds})
