@@ -106,7 +106,7 @@ def updateJobsFile(request):
     jobs.to_excel(r"D:/sugDjango/recommendApi/media/jobDbData1.xlsx", index=True)
     return JsonResponse(status=200, data={"message":"updated jobs success"})
 
-    
+
 def updateCvsFile(request):
     client = MongoClient()
     # point the client at mongo URI
@@ -202,7 +202,6 @@ def getSugJobForCv(request, cvId):
     # print(kq)
     srs = sorted(kq.items(), key=lambda x: x[0])
     fiveBestSimilar = srs[-5:]
-
     print(fiveBestSimilar)
     finalRs = [x[1] for x in fiveBestSimilar]
     ids = []
