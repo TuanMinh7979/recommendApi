@@ -12,23 +12,24 @@ import os
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-tfidf_vectorizer = TfidfVectorizer()
+
 module_dir = os.path.dirname(__file__)  # get current directory
 cvFilePath = os.path.join(module_dir, '..\\media\\pcvsdata.xlsx',)
 jobFilePath = os.path.join(module_dir, '..\\media\\pjobsdata.xlsx',)
 
 
-def getSugCvForJob(request, JobId):
+def getSugCvForJob(request, jobId):
 
    
     cvdf = pd.read_excel(cvFilePath)
     jobdf = pd.read_excel(jobFilePath)
     
-    givenJobRow= jobdf.loc[jobdf['_id'] == JobId]
+    givenJobRow= jobdf.loc[jobdf['_id'] == jobId]
    
     print(givenJobRow)
     ls = []
     ls.append(givenJobRow['fulltext3'].tolist()[0])
+    tfidf_vectorizer = TfidfVectorizer()
     tfidf_jobs = tfidf_vectorizer.fit_transform(ls)
 
     tfidf_cvs = tfidf_vectorizer.transform(cvdf['fulltext3'])
@@ -51,21 +52,21 @@ def getSugCvForJob(request, JobId):
     return JsonResponse(status=200, data={"sugList": ids})
 
 
-def getSugJobForCv(request, CvId):
+def getSugJobForCv(request, cvId):
 
     cvdf = pd.read_excel(cvFilePath)
     jobdf = pd.read_excel(jobFilePath)
 
-    givenCvRow= cvdf.loc[cvdf['_id'] == CvId]
+    givenCvRow= cvdf.loc[cvdf['_id'] == cvId]
    
     print(givenCvRow)
 
     ls = []
     ls.append(givenCvRow['fulltext3'].tolist()[0])
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
-
-    tfidf_cvs = tfidf_vectorizer.fit_transform(ls)
-    tfidf_jobs = tfidf_vectorizer.transform(jobdf['fulltext3'])
+    tfidf_vectorizer1 = TfidfVectorizer()
+    tfidf_cvs = tfidf_vectorizer1.fit_transform(ls)
+    tfidf_jobs = tfidf_vectorizer1.transform(jobdf['fulltext3'])
     cos_similarity = map(lambda x: cosine_similarity(tfidf_jobs, x), tfidf_cvs)
     simrs = list(cos_similarity)
 
@@ -83,3 +84,23 @@ def getSugJobForCv(request, CvId):
         ids.append(jobdf.iloc[idx]['_id'])
     print(ids)
     return JsonResponse(status=200, data={"sugList": ids})
+
+
+
+def getSimilarJob(request, jobId):
+    jobdf = pd.read_excel(jobFilePath)
+
+    jobToFindSim= jobdf.loc[jobdf['_id'] == jobId]
+    tfidf_vectorizer2 = TfidfVectorizer()
+    jobToFindSimVt = tfidf_vectorizer2.fit_transform(jobToFindSim['fulltext3'])
+    otherJobsVt = tfidf_vectorizer2.transform(jobdf['fulltext3'])
+    jobSimMatrix = map(lambda x: cosine_similarity(otherJobsVt,x),jobToFindSimVt)
+    jobSimList = list(jobSimMatrix)
+    simXidxList= {x[0]:idx for idx,x in enumerate(jobSimList[0])}
+    sortedSimXidxList=sorted(simXidxList.items(), key=lambda x: x[0])
+    topSimJobtoJon= sortedSimXidxList[-6:]
+    idxSimList= [x[1] for x in topSimJobtoJon]
+    jobSimjobIds= []
+    for idx in idxSimList:
+      jobSimjobIds.append(jobdf.iloc[idx]['_id'])
+    return JsonResponse(status=200, data={"sugList": jobSimjobIds})

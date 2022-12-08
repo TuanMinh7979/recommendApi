@@ -18,6 +18,7 @@ from django.urls import path
 from . import views
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('getSugCvForJob/<str:JobId>', views.getSugCvForJob),
-    path('getSugJobForCv/<str:CvId>', views.getSugJobForCv),
+    path('getSugCvForJob/<str:jobId>', views.getSugCvForJob),
+    path('getSugJobForCv/<str:cvId>', views.getSugJobForCv),
+    path('getSimilarJob/<str:jobId>', views.getSimilarJob),
 ]
