@@ -21,5 +21,6 @@ urlpatterns = [
     path('getSugCvForJob/<str:jobId>', views.getSugCvForJob),
     path('getSugJobForCv/<str:cvId>', views.getSugJobForCv),
     path('getSimilarJob/<str:jobId>', views.getSimilarJob),
-    path('readMongoDBData/', views.readMongoDBData)
+    path('updateJobsFile/', views.updateJobsFile),
+    path('updateCvsFile/', views.updateCvsFile)
 ]

@@ -83,8 +83,7 @@ def tokenize(text):
 
     return doc
 
-
-def readMongoDBData(request):
+def updateJobsFile(request):
     client = MongoClient()
     # point the client at mongo URI
     client = MongoClient(
@@ -94,38 +93,57 @@ def readMongoDBData(request):
     # #select the collection within the database
     jobposts = db.jobposts
     jobpostsDb = pd.DataFrame(list(jobposts.find()))
+    jobpostsDb = jobpostsDb.fillna('')
+    jobpostsDb['fulltext'] = jobpostsDb['candidateRequiredText'] + \
+        jobpostsDb['descriptionText']+jobpostsDb['title']
+    jobs = jobpostsDb[["_id", "fulltext"]]
+    jobs['fulltext'] = np.vectorize(cleanhtml)(jobs['fulltext'])
+    jobs['fulltext'] = np.vectorize(text_preprocessing)(jobs['fulltext'])
+    jobs["fulltext"]=jobs["fulltext"].apply(lambda x: tokenize(x))
+    stw = getStopWord()
+    jobs["fulltext"]=jobs["fulltext"].apply(lambda x: rmStw(x, stw))
+    print(jobs.head())
+    jobs.to_excel(r"D:/sugDjango/recommendApi/media/jobDbData1.xlsx", index=True)
+    return JsonResponse(status=200, data={"message":"updated jobs success"})
+
+    
+def updateCvsFile(request):
+    client = MongoClient()
+    # point the client at mongo URI
+    client = MongoClient(
+        'mongodb+srv://tuan:12345678Abc@cluster0.h8bya9k.mongodb.net/')
+    # #select database
+    db = client['jobapp']
+    # #select the collection within the database
     resume = db.resumes
     resumeDb = pd.DataFrame(list(resume.find()))
 
-    jobpostsDb = jobpostsDb.fillna('')
+   
     resumeDb = resumeDb.fillna('')
-    jobpostsDb['fulltext'] = jobpostsDb['candidateRequiredText'] + \
-        jobpostsDb['descriptionText']+jobpostsDb['title']
+    
     resumeDb['fulltext'] = resumeDb['experience']+resumeDb['skills']
 
     #
-    jobs = jobpostsDb[["_id", "fulltext"]]
+   
     cvs = resumeDb[["_id", "fulltext"]]
     # text preprocessing, remove html, punctuation
-    jobs['fulltext'] = np.vectorize(cleanhtml)(jobs['fulltext'])
-    jobs['fulltext'] = np.vectorize(text_preprocessing)(jobs['fulltext'])
+   
     cvs['fulltext'] = np.vectorize(cleanhtml)(cvs['fulltext'])
     cvs['fulltext'] = np.vectorize(text_preprocessing)(cvs['fulltext'])
     #tokenize
-    jobs["fulltext"]=jobs["fulltext"].apply(lambda x: tokenize(x))
+    
     cvs["fulltext"]=cvs["fulltext"].apply(lambda x: tokenize(x))
     # remove stopword
     stw = getStopWord()
-    jobs["fulltext"]=jobs["fulltext"].apply(lambda x: rmStw(x, stw))
+    
     cvs["fulltext"]=cvs["fulltext"].apply(lambda x: rmStw(x, stw))
 
-    print(jobs.head())
+   
     print(cvs.head())
-    jobs.to_excel(r"D:/sugDjango/recommendApi/media/jobDbData1.xlsx", index=True)
+    
     cvs.to_excel(r"D:/sugDjango/recommendApi/media/cvsDbData1.xlsx", index=True)
 
-    return JsonResponse(status=200, data={"ok": "ok"})
-
+    return JsonResponse(status=200, data={"message":"updated cvs success"})
 
 def getSugCvForJob(request, jobId):
 
