@@ -96,7 +96,7 @@ def updateJobsFile(request):
     jobs["fulltext"]=jobs["fulltext"].apply(lambda x: tokenize(x))
     stw = getStopWord()
     jobs["fulltext"]=jobs["fulltext"].apply(lambda x: rmStw(x, stw))
-    print(jobs.head())
+   
     jobs.to_excel(jobFilePath, index=True)
     return JsonResponse(status=200, data={"message":"updated jobs success"})
 
@@ -133,7 +133,7 @@ def updateCvsFile(request):
     cvs["fulltext"]=cvs["fulltext"].apply(lambda x: rmStw(x, stw))
 
    
-    print(cvs.head())
+  
     
     cvs.to_excel(cvFilePath, index=True)
 
@@ -146,7 +146,7 @@ def getSugCvForJob(request, jobId):
 
     givenJobRow = jobdf.loc[jobdf['_id'] == jobId]
 
-    print(givenJobRow)
+
     ls = []
     ls.append(givenJobRow['fulltext'].tolist()[0])
     tfidf_vectorizer = TfidfVectorizer()
@@ -159,10 +159,10 @@ def getSugCvForJob(request, jobId):
 
     rs = simrs[0]
     kq = {x[0]: idx for idx, x in enumerate(rs)}
-    print(kq)
+   
     srs = sorted(kq.items(), key=lambda x: x[0])
     fiveBestSimilar = srs[-5:]
-    print(fiveBestSimilar)
+   
     finalRs = [x[1] for x in fiveBestSimilar]
     ids = []
     for idx in finalRs:
@@ -179,7 +179,7 @@ def getSugJobForCv(request, cvId):
 
     givenCvRow = cvdf.loc[cvdf['_id'] == cvId]
 
-    print(givenCvRow)
+    
 
     ls = []
     ls.append(givenCvRow['fulltext'].tolist()[0])
@@ -191,12 +191,12 @@ def getSugJobForCv(request, cvId):
     simrs = list(cos_similarity)
 
     rs = simrs[0]
-    print(rs)
+   
     kq = {x[0]: idx for idx, x in enumerate(rs)}
-    # print(kq)
+
     srs = sorted(kq.items(), key=lambda x: x[0])
     fiveBestSimilar = srs[-5:]
-    print(fiveBestSimilar)
+   
     finalRs = [x[1] for x in fiveBestSimilar]
     ids = []
     for idx in finalRs:
@@ -222,4 +222,5 @@ def getSimilarJob(request, jobId):
     jobSimjobIds = []
     for idx in idxSimList:
         jobSimjobIds.append(jobdf.iloc[idx]['_id'])
+    jobSimjobIds.pop()    
     return JsonResponse(status=200, data={"sugList": jobSimjobIds})
