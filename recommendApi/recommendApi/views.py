@@ -3,25 +3,19 @@ import numpy as np
 from string import punctuation
 from pymongo import MongoClient
 import pymongo
-from email import message
-from django.shortcuts import render, redirect
-from django.http import HttpResponse
-# Create your views here.
-from django.contrib.auth.models import User, auth
 from django.http import JsonResponse
-from django.core import serializers
-
-from django.forms.models import model_to_dict
 import pandas as pd
-import os
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from pyvi import ViTokenizer
-
+import os
+dirname = os.path.dirname(__file__)
 module_dir = os.path.dirname(__file__)  # get current directory
-cvFilePath = os.path.join(module_dir, '../media/cvsDbData.xlsx',)
-jobFilePath = os.path.join(module_dir, '../media/jobsDbData.xlsx',)
+# cvFilePath = os.path.join(module_dir, '../media/cvsDbData1.xlsx',)
+# jobFilePath = os.path.join(module_dir, '../media/jobsDbData1.xlsx',)
+cvFilePath = 'D:/sugDjango/recommendApi/media/cvsDbData1.xlsx'
+jobFilePath = "D:/sugDjango/recommendApi/media/jobDbData1.xlsx"
 
 
 def cleanhtml(raw_html):
@@ -50,7 +44,7 @@ def text_preprocessing(text):
 
 def getStopWord():
     stop_word = []
-    with open("D:/sugDjango/recommendApi/media/viStop.txt", encoding="utf-8") as f:
+    with open(os.path.join(module_dir, '../media/viStop.txt',), encoding="utf-8") as f:
         text = f.read()
         for word in text.split():
             stop_word.append(word)
@@ -103,7 +97,7 @@ def updateJobsFile(request):
     stw = getStopWord()
     jobs["fulltext"]=jobs["fulltext"].apply(lambda x: rmStw(x, stw))
     print(jobs.head())
-    jobs.to_excel(r"D:/sugDjango/recommendApi/media/jobDbData1.xlsx", index=True)
+    jobs.to_excel(jobFilePath, index=True)
     return JsonResponse(status=200, data={"message":"updated jobs success"})
 
 
@@ -141,7 +135,7 @@ def updateCvsFile(request):
    
     print(cvs.head())
     
-    cvs.to_excel(r"D:/sugDjango/recommendApi/media/cvsDbData1.xlsx", index=True)
+    cvs.to_excel(cvFilePath, index=True)
 
     return JsonResponse(status=200, data={"message":"updated cvs success"})
 
@@ -154,11 +148,11 @@ def getSugCvForJob(request, jobId):
 
     print(givenJobRow)
     ls = []
-    ls.append(givenJobRow['fulltext3'].tolist()[0])
+    ls.append(givenJobRow['fulltext'].tolist()[0])
     tfidf_vectorizer = TfidfVectorizer()
     tfidf_jobs = tfidf_vectorizer.fit_transform(ls)
 
-    tfidf_cvs = tfidf_vectorizer.transform(cvdf['fulltext3'])
+    tfidf_cvs = tfidf_vectorizer.transform(cvdf['fulltext'])
 
     cos_similarity = map(lambda x: cosine_similarity(tfidf_cvs, x), tfidf_jobs)
     simrs = list(cos_similarity)
@@ -188,11 +182,11 @@ def getSugJobForCv(request, cvId):
     print(givenCvRow)
 
     ls = []
-    ls.append(givenCvRow['fulltext3'].tolist()[0])
+    ls.append(givenCvRow['fulltext'].tolist()[0])
 
     tfidf_vectorizer1 = TfidfVectorizer()
     tfidf_cvs = tfidf_vectorizer1.fit_transform(ls)
-    tfidf_jobs = tfidf_vectorizer1.transform(jobdf['fulltext3'])
+    tfidf_jobs = tfidf_vectorizer1.transform(jobdf['fulltext'])
     cos_similarity = map(lambda x: cosine_similarity(tfidf_jobs, x), tfidf_cvs)
     simrs = list(cos_similarity)
 
@@ -216,8 +210,8 @@ def getSimilarJob(request, jobId):
 
     jobToFindSim = jobdf.loc[jobdf['_id'] == jobId]
     tfidf_vectorizer2 = TfidfVectorizer()
-    jobToFindSimVt = tfidf_vectorizer2.fit_transform(jobToFindSim['fulltext3'])
-    otherJobsVt = tfidf_vectorizer2.transform(jobdf['fulltext3'])
+    jobToFindSimVt = tfidf_vectorizer2.fit_transform(jobToFindSim['fulltext'])
+    otherJobsVt = tfidf_vectorizer2.transform(jobdf['fulltext'])
     jobSimMatrix = map(lambda x: cosine_similarity(
         otherJobsVt, x), jobToFindSimVt)
     jobSimList = list(jobSimMatrix)
