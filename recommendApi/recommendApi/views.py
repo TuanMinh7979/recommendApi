@@ -88,13 +88,14 @@ def updateJobsFile(request):
     jobposts = db.jobposts
     jobpostsDb = pd.DataFrame(list(jobposts.find()))
     jobpostsDb = jobpostsDb.fillna('')
-    jobpostsDb['fulltext'] = jobpostsDb['candidateRequiredText'] + \
-        jobpostsDb['descriptionText']+jobpostsDb['title']
+    jobpostsDb['fulltext'] = jobpostsDb['title']+" "+jobpostsDb['title']+" "+jobpostsDb['title']+" "+jobpostsDb['candidateRequiredText'] + " " +jobpostsDb['descriptionText']
     jobs = jobpostsDb[["_id", "fulltext"]]
     jobs['fulltext'] = np.vectorize(cleanhtml)(jobs['fulltext'])
     jobs['fulltext'] = np.vectorize(text_preprocessing)(jobs['fulltext'])
     jobs["fulltext"]=jobs["fulltext"].apply(lambda x: tokenize(x))
+    myStw=["developer", "lập_trình_viên","developers", "development"]
     stw = getStopWord()
+    stw.extend(myStw)
     jobs["fulltext"]=jobs["fulltext"].apply(lambda x: rmStw(x, stw))
    
     jobs.to_excel(jobFilePath, index=True)
@@ -115,7 +116,7 @@ def updateCvsFile(request):
    
     resumeDb = resumeDb.fillna('')
     
-    resumeDb['fulltext'] = resumeDb['experience']+resumeDb['skills']
+    resumeDb['fulltext'] = resumeDb['experience']+" "+resumeDb['skills']
 
     #
    
@@ -128,7 +129,9 @@ def updateCvsFile(request):
     
     cvs["fulltext"]=cvs["fulltext"].apply(lambda x: tokenize(x))
     # remove stopword
+   
     stw = getStopWord()
+
     
     cvs["fulltext"]=cvs["fulltext"].apply(lambda x: rmStw(x, stw))
 
