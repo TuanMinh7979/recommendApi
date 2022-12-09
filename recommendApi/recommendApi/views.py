@@ -116,7 +116,7 @@ def updateCvsFile(request):
    
     resumeDb = resumeDb.fillna('')
     
-    resumeDb['fulltext'] = resumeDb['experience']+" "+resumeDb['skills']
+    resumeDb['fulltext'] = resumeDb['experience']+" "+resumeDb['skills']+" "+resumeDb['skills']
 
     #
    
