@@ -5,7 +5,7 @@ from pymongo import MongoClient
 import pymongo
 from django.http import JsonResponse
 import pandas as pd
-from sklearn.metrics.pairwise import cosine_similarity
+
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from pyvi import ViTokenizer
@@ -14,9 +14,10 @@ dirname = os.path.dirname(__file__)
 module_dir = os.path.dirname(__file__)  # get current directory
 # cvFilePath = os.path.join(module_dir, '../media/cvsDbData1.xlsx',)
 # jobFilePath = os.path.join(module_dir, '../media/jobsDbData1.xlsx',)
-cvFilePath = 'D:/sugDjango/recommendApi/media/cvsDbData1.xlsx'
-jobFilePath = "D:/sugDjango/recommendApi/media/jobDbData1.xlsx"
+cvFilePath = 'D:/sugDjango/recommendApi/media/cvsDbData.xlsx'
+jobFilePath = "D:/sugDjango/recommendApi/media/jobDbData.xlsx"
 
+connectionString= "mongodb+srv://tuan:12345678Abc@cluster0.h8bya9k.mongodb.net/"
 
 def cleanhtml(raw_html):
     cleantext = ''
@@ -33,8 +34,6 @@ def cleanhtml(raw_html):
     except:
         print(raw_html)
     return cleantext
-
-
 def text_preprocessing(text):
     text = text.lower()
     text = text.translate(str.maketrans(' ', ' ', punctuation))
@@ -74,14 +73,13 @@ def tokenize(text):
         return doc
     except:
         print(doc)
-
     return doc
 
 def updateJobsFile(request):
     client = MongoClient()
     # point the client at mongo URI
     client = MongoClient(
-        'mongodb+srv://tuan:12345678Abc@cluster0.h8bya9k.mongodb.net/')
+        )
     # #select database
     db = client['jobapp']
     # #select the collection within the database
@@ -104,12 +102,8 @@ def updateJobsFile(request):
 
 def updateCvsFile(request):
     client = MongoClient()
-    # point the client at mongo URI
-    client = MongoClient(
-        'mongodb+srv://tuan:12345678Abc@cluster0.h8bya9k.mongodb.net/')
-    # #select database
+    client = MongoClient(connectionString)
     db = client['jobapp']
-    # #select the collection within the database
     resume = db.resumes
     resumeDb = pd.DataFrame(list(resume.find()))
 
@@ -153,11 +147,21 @@ def getSugCvForJob(request, jobId):
     ls = []
     ls.append(givenJobRow['fulltext'].tolist()[0])
     tfidf_vectorizer = TfidfVectorizer()
-    tfidf_jobs = tfidf_vectorizer.fit_transform(ls)
+    tfidf_job = tfidf_vectorizer.fit_transform(ls)
+
+
+
+    tokens= tfidf_vectorizer.get_feature_names()
+    for token in tokens: 
+     print(token)
+
+
+
 
     tfidf_cvs = tfidf_vectorizer.transform(cvdf['fulltext'])
+    cos_similarity = map(lambda x: cosine_similarity(tfidf_cvs, x), tfidf_job)
 
-    cos_similarity = map(lambda x: cosine_similarity(tfidf_cvs, x), tfidf_jobs)
+
     simrs = list(cos_similarity)
 
     rs = simrs[0]
@@ -186,11 +190,21 @@ def getSugJobForCv(request, cvId):
 
     ls = []
     ls.append(givenCvRow['fulltext'].tolist()[0])
-
     tfidf_vectorizer1 = TfidfVectorizer()
-    tfidf_cvs = tfidf_vectorizer1.fit_transform(ls)
+    tfidf_cv = tfidf_vectorizer1.fit_transform(ls)
+
+
+
+    # tokens= tfidf_vectorizer1.get_feature_names()
+    # for token in tokens: 
+    #  print(token)
+    
+
+
     tfidf_jobs = tfidf_vectorizer1.transform(jobdf['fulltext'])
-    cos_similarity = map(lambda x: cosine_similarity(tfidf_jobs, x), tfidf_cvs)
+    cos_similarity = map(lambda x: cosine_similarity(tfidf_jobs, x), tfidf_cv)
+
+    
     simrs = list(cos_similarity)
 
     rs = simrs[0]
@@ -236,3 +250,27 @@ def getSimilarJob(request, jobId):
     print(jobSimjobIds)    
     jobSimjobIds.pop()    
     return JsonResponse(status=200, data={"sugList": jobSimjobIds})
+
+
+
+def readAddWriteToXlsx(request):
+
+    client = MongoClient()
+    client = MongoClient(connectionString)
+    db = client['jobapp']
+    
+    resume = db.resumes
+    resumeDb = pd.DataFrame(list(resume.find()))
+    resumeDb = resumeDb.fillna('')
+    resumeDb= resumeDb[["skills", "experience"]]
+    resumeDb.to_excel("D:/sugDjango/recommendApi/media/cvDb.xlsx", index=False)
+
+    jobDb = db.jobposts
+    jobDb = pd.DataFrame(list(jobDb.find()))
+    jobDb = jobDb.fillna('')
+    jobDb= jobDb[["descriptionText", "title","candidateRequiredText"]]
+    jobDb.to_excel("D:/sugDjango/recommendApi/media/jobDb.xlsx", index=False)
+    return JsonResponse(status=200, data={"message":"demo"})
+
+
+    

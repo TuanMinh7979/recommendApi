@@ -22,5 +22,6 @@ urlpatterns = [
     path('getSugJobForCv/<str:cvId>', views.getSugJobForCv),
     path('getSimilarJob/<str:jobId>', views.getSimilarJob),
     path('updateJobsFile/', views.updateJobsFile),
-    path('updateCvsFile/', views.updateCvsFile)
+    path('updateCvsFile/', views.updateCvsFile),
+    path('readAddWriteToXlsx/', views.readAddWriteToXlsx)
 ]
